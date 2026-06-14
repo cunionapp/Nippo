@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <!-- 追加: サーバー通信用のブリッジスクリプト -->
+    <script src="gas-client-bridge.js"></script>
+    <title>打刻</title>
+    <style>
+        :root {
+            --color-primary: #2563eb;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        html {
+            background-color: var(--color-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-primary);
+            margin: 0;
+            padding: 0;
+            color: #1f2937;
+        }
+
+        .app-container {
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f3f4f6;
+            overflow: hidden;
+        }
+
+        .header-area {
+            background-color: var(--color-primary);
+            color: #fff;
+            padding: 0.75rem 1rem;
+            padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+            flex-shrink: 0;
+            border: none;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .btn-link {
+            font-size: 0.875rem;
+            background: white;
+            color: var(--color-primary);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+            overflow: auto;
+        }
+
+        .clock-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .clock-date {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .clock-time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-top: 0.5rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .history-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+        }
+
+        .history-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .history-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 1rem;
+        }
+
+        .history-list li:last-child {
+            border-bottom: none;
+        }
+
+        .history-empty {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+
+        .punch-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: auto;
+        }
+
+        .btn-punch {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 1.25rem 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            transition: opacity 0.2s;
+        }
+
+        .btn-punch:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-in {
+            background-color: #16a34a;
+        }
+
+        .btn-out {
+            background-color: #dc2626;
+        }
+
+        .status-message {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #b45309;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+
+        .feedback-message {
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            min-height: 1.25rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: #f3f4f6;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="text-gray-600">読み込み中...</p>
+    </div>
+
+    <div id="app" class="app-container hidden">
+        <header class="header-area">
+            <div class="header-top">
+                <h1 class="header-title">打刻</h1>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a id="nippoLink" href="./index.html" class="btn-link hidden">日報入力へ</a>
+                    <a href="./timecard.html" class="btn-link">タイムカードへ</a>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">氏名：<span id="userNameLabel">読み込み中...</span></p>
+        </header>
+
+        <div class="main-panel">
+            <div class="clock-card">
+                <div id="clockDate" class="clock-date">----年--月--日（-）</div>
+                <div id="clockTime" class="clock-time">--:--:--</div>
+            </div>
+
+            <div id="statusMessage" class="status-message hidden"></div>
+
+            <div class="history-card">
+                <div class="history-title">本日の出退勤</div>
+                <ul id="historyList" class="history-list"></ul>
+            </div>
+
+            <p id="feedbackMessage" class="feedback-message"></p>
+
+            <div class="punch-buttons">
+                <button id="btnClockIn" class="btn-punch btn-in" type="button">出勤</button>
+                <button id="btnClockOut" class="btn-punch btn-out" type="button">退勤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canPunch = false;
+        let clockTimer = null;
+
+        const DOM = {
+            loading: document.getElementById('loadingOverlay'),
+            app: document.getElementById('app'),
+            clockDate: document.getElementById('clockDate'),
+            clockTime: document.getElementById('clockTime'),
+            historyList: document.getElementById('historyList'),
+            statusMessage: document.getElementById('statusMessage'),
+            feedbackMessage: document.getElementById('feedbackMessage'),
+            btnIn: document.getElementById('btnClockIn'),
+            btnOut: document.getElementById('btnClockOut'),
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startLocalClock();
+            loadPunchData();
+            DOM.btnIn.addEventListener('click', () => registerPunch('in'));
+            DOM.btnOut.addEventListener('click', () => registerPunch('out'));
+        });
+
+        function startLocalClock() {
+            updateLocalClock();
+            clockTimer = setInterval(updateLocalClock, 1000);
+        }
+
+        function updateLocalClock() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth() + 1;
+            const d = now.getDate();
+            const week = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            DOM.clockDate.textContent = `${y}年${m}月${d}日（${week}）`;
+            DOM.clockTime.textContent = `${hh}:${mm}:${ss}`;
+        }
+
+        function showApp() {
+            DOM.loading.classList.add('hidden');
+            DOM.app.classList.remove('hidden');
+        }
+
+        function renderHistory(history) {
+            DOM.historyList.innerHTML = '';
+            if (!history || history.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'history-empty';
+                li.textContent = 'まだ打刻がありません';
+                DOM.historyList.appendChild(li);
+                return;
+            }
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${item.type}</span><span>${item.time}</span>`;
+                DOM.historyList.appendChild(li);
+            });
+        }
+
+        function setPunchButtonsEnabled(enabled, hasIn, hasOut) {
+            canPunch = enabled;
+            DOM.btnIn.disabled = !enabled || hasIn;
+            DOM.btnOut.disabled = !enabled || hasOut;
+        }
+
+        function loadPunchData() {
+            google.script.run
+                .withSuccessHandler(data => {
+                    showApp();
+                    if (!data.success) {
+                        DOM.statusMessage.textContent = data.message || 'データの取得に失敗しました';
+                        DOM.statusMessage.classList.remove('hidden');
+                        setPunchButtonsEnabled(false);
+                        return;
+                    }
+                    // ユーザー名と日報ボタン表示の制御を追加
+                    document.getElementById('userNameLabel').textContent = data.userName || '（未設定）';
+                    if (data.isAllowedNippo) {
+                        document.getElementById('nippoLink').classList.remove('hidden');
+                    } else {
+                        document.getElementById('nippoLink').classList.add('hidden');
+                    }
+
+                    if (data.clock) {
+                        DOM.clockDate.textContent = `${data.clock.dateLabel}（${data.clock.weekdayLabel}）`;
+                    }
+                    renderHistory(data.history);
+                    setPunchButtonsEnabled(!!data.canPunch, !!data.hasStartTime, !!data.hasEndTime);
+                    if (data.message) {
+                        DOM.statusMessage.textContent = data.message;
+                        DOM.statusMessage.classList.remove('hidden');
+                    } else {
+                        DOM.statusMessage.classList.add('hidden');
+                    }
+                })
+                .withFailureHandler(err => {
+                    showApp();
+                    DOM.statusMessage.textContent = '読み込みエラー: ' + err.message;
+                    DOM.statusMessage.classList.remove('hidden');
+                    setPunchButtonsEnabled(false);
+                })
+                .getPunchPageData();
+        }
+
+        function registerPunch(action) {
+            if (!canPunch) return;
+            if (action === 'in' && DOM.btnIn.disabled) return;
+            if (action === 'out' && DOM.btnOut.disabled) return;
+            DOM.btnIn.disabled = true;
+            DOM.btnOut.disabled = true;
+            DOM.feedbackMessage.textContent = '記録中...';
+
+            google.script.run
+                .withSuccessHandler(res => {
+                    DOM.feedbackMessage.textContent = res.message || '記録しました';
+                    DOM.feedbackMessage.style.color = '#16a34a';
+                    loadPunchData();
+                })
+                .withFailureHandler(err => {
+                    DOM.feedbackMessage.textContent = err.message;
+                    DOM.feedbackMessage.style.color = '#dc2626';
+                    loadPunchData();
+                })
+                .registerTimestamp(action);
+        }
+    </script>
+</body>
+
+</html>

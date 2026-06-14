@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 追加: サーバー通信用のブリッジスクリプト -->
+    <script src="gas-client-bridge.js"></script>
+    <title>作業者日報</title>
+    <style>
+        :root {
+            --font-size-app-title: 3.5rem;
+            --font-size-user-name: 2rem;
+            --font-size-label: 2rem;
+            --font-size-input: 2rem;
+            --font-size-subtitle: 3rem;
+            --font-size-table-header: 2rem;
+            --font-size-table-cell: 2rem;
+            --font-size-name-cell: 2rem;
+            --font-size-toggle-button: 1.8rem;
+            --color-primary: #2563eb;
+            --input-font-size: 40px;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        html {
+            background-color: var(--color-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-primary);
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #f3f4f6;
+        }
+
+        .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #f3f4f6;
+        }
+
+        #mainContent {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #mainContent.hidden {
+            display: none !important;
+        }
+
+        .header-area {
+            background-color: var(--color-primary);
+            color: #fff;
+            padding: 1.5rem;
+            padding-top: max(1.5rem, env(safe-area-inset-top, 0px));
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: var(--font-size-app-title);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: var(--font-size-user-name);
+            margin-top: 1rem;
+        }
+
+        .btn-link {
+            background: white;
+            color: var(--color-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: var(--font-size-toggle-button);
+        }
+
+        .button-primary,
+        .button-secondary {
+            border-radius: 10px;
+            transition: background-color 0.2s;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            padding: 2rem 3rem;
+        }
+
+        .button-primary {
+            background-color: #2563eb;
+            color: #ffffff;
+            font-size: 2.5rem;
+        }
+
+        .button-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+            font-size: 2.2rem;
+        }
+
+        .button-primary:hover {
+            background-color: #1e40af;
+        }
+
+        .button-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .button-primary:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .button-secondary:disabled {
+            background-color: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .input-field {
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            padding: 1.5rem 1rem;
+            font-size: var(--input-font-size) !important;
+            min-height: 44px;
+            background-color: #f5f5f5;
+            width: 100%;
+            text-align: center;
+            text-align-last: center;
+        }
+
+        .p-4 {
+            padding: 2rem;
+        }
+
+        .p-6 {
+            padding: 3rem;
+        }
+
+        .text-xs {
+            font-size: 1.25rem;
+        }
+
+        .text-sm {
+            font-size: 1.5rem;
+        }
+
+        .text-base {
+            font-size: 2rem;
+        }
+
+        .text-xl {
+            font-size: 2.5rem;
+        }
+
+        .text-2xl {
+            font-size: 3rem;
+        }
+
+        .text-3xl {
+            font-size: 3.5rem;
+        }
+
+        .table-container {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .report-table {
+            table-layout: fixed;
+            width: 1325px;
+            border-collapse: collapse;
+        }
+
+        .report-table th {
+            font-size: var(--font-size-table-header);
+            white-space: nowrap;
+            background-color: #f9fafb;
+            color: #6b7280;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            border-bottom: 2px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .report-table td {
+            font-size: var(--font-size-table-cell);
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        .toggle-button {
+            padding: 1rem 2rem;
+            font-size: var(--font-size-toggle-button);
+            border-radius: 10px;
+        }
+
+        .report-data-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --font-size-app-title: 1.25rem;
+                --font-size-user-name: 0.875rem;
+                --font-size-label: 0.875rem;
+                --font-size-input: 0.875rem;
+                --font-size-subtitle: 1.1rem;
+                --font-size-table-header: 0.75rem;
+                --font-size-table-cell: 0.75rem;
+                --font-size-name-cell: 0.75rem;
+                --font-size-status-select: 0.75rem;
+                --font-size-toggle-button: 0.75rem;
+                --input-font-size: 14px;
+            }
+
+            .header-area {
+                padding: 0.75rem 1rem;
+                padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+                position: static !important;
+            }
+
+            /* ヘッダーの縦幅も微調整 */
+
+            .header-nav {
+                margin-top: 0.5rem;
+            }
+
+            .btn-link {
+                font-size: 0.875rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .button-primary,
+            .button-secondary {
+                font-size: 0.875rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .toggle-button {
+                font-size: 0.75rem;
+                padding: 0.1rem 0.5rem;
+                min-height: 24px;
+            }
+
+            .input-field {
+                padding: 0.25rem 0.2rem;
+                font-size: 13px !important;
+                min-height: 32px;
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: none;
+                text-align: center;
+            }
+
+            .p-4,
+            .p-6 {
+                padding: 0.25rem 0.5rem;
+            }
+
+            /* 余白をさらに圧縮 */
+
+            .text-xs {
+                font-size: 0.7rem;
+            }
+
+            .text-sm {
+                font-size: 0.75rem;
+            }
+
+            .text-base {
+                font-size: 0.8rem;
+            }
+
+            .text-xl {
+                font-size: 0.9rem;
+            }
+
+            .text-2xl {
+                font-size: 1rem;
+            }
+
+            .text-3xl {
+                font-size: 1.1rem;
+            }
+
+            .report-table {
+                width: 700px;
+            }
+
+            .report-table th,
+            .report-table td {
+                padding: 0.4rem 0.2rem;
+                font-size: 0.75rem;
+            }
+
+            .report-table th:nth-child(1),
+            .report-table td:nth-child(1) {
+                width: 75px;
+            }
+
+            .report-table th:nth-child(2),
+            .report-table td:nth-child(2) {
+                width: 75px;
+            }
+
+            .report-table th:nth-child(3),
+            .report-table td:nth-child(3) {
+                width: 100px;
+            }
+
+            .report-table th:nth-child(4),
+            .report-table td:nth-child(4) {
+                width: 100px;
+            }
+
+            .report-table th:nth-child(5),
+            .report-table td:nth-child(5) {
+                width: 350px;
+            }
+
+            .name-cell {
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .table-container {
+                max-height: none;
+                border: none;
+                border-top: 1px solid #e5e7eb;
+                border-bottom: 1px solid #e5e7eb;
+            }
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 10px solid #f3f3f3;
+            border-top: 10px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .selected-row {
+            background-color: #EBF8FF;
+        }
+
+        .bg-red-50 {
+            background-color: #FEF2F2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app" class="app-container">
+        <!-- 統一ヘッダー -->
+        <header class="header-area">
+            <div class="header-top">
+                <h1 class="header-title">作業者日報</h1>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="./punch.html" class="btn-link">打刻へ</a>
+                    <a href="./timecard.html" class="btn-link">タイムカードへ</a>
+                </div>
+            </div>
+            <div class="header-nav">
+                <div>氏名: <span id="userName" class="font-bold"></span></div>
+            </div>
+        </header>
+
+        <div class="card p-6" style="padding-top: 0;">
+            <div id="loadingSpinner" class="fixed inset-0 bg-[#f3f4f6] flex flex-col items-center justify-center z-[100]">
+                <div class="spinner"></div>
+                <p class="text-xl text-gray-600 mt-4" style="font-size: 1.5rem; font-weight: bold;">読み込み中...</p>
+            </div>
+
+            <div id="mainContent" class="hidden">
+                <div id="errorMessages">
+                    <p id="userNotFoundMessage" class="text-3xl text-red-600 text-center mt-2 hidden">ユーザー情報が見つかりません。
+                    </p>
+                    <p id="accessDeniedMessage" class="text-3xl text-red-600 text-center mt-2 hidden">利用権限がありません。</p>
+                    <p id="sheetErrorMessage" class="text-3xl text-red-600 text-center mt-2 hidden"></p>
+                </div>
+
+                <!-- 検索・フィルタ -->
+                <div id="searchFilter" class="mb-1 bg-gray-50 p-1 rounded-lg">
+                    <div class="flex gap-1 items-end">
+                        <div class="flex-1 min-w-[0]">
+                            <label for="reportDate" class="font-bold text-gray-700 block text-center"
+                                style="font-size: var(--font-size-label); margin-bottom: 2px;">作業日</label>
+                            <input type="date" id="reportDate" class="input-field" style="padding: 2px; min-height: 30px;">
+                        </div>
+                        <div class="flex-1 min-w-[0]">
+                            <label for="sheetName" class="font-bold text-gray-700 block text-center"
+                                style="font-size: var(--font-size-label); margin-bottom: 2px;">作業場所</label>
+                            <select id="sheetName" class="input-field" style="padding: 2px; min-height: 30px;"></select>
+                        </div>
+                        <button id="reloadButton" class="button-primary px-2 py-1"
+                            style="flex: 0 0 auto; min-height: 30px; font-size: 0.8rem; border-radius: 8px;">更新</button>
+                    </div>
+                </div>
+
+                <div class="report-data-header mb-2">
+                    <div class="flex items-center space-x-2">
+                        <h2 class="font-bold" style="font-size: var(--font-size-subtitle);">日報データ</h2>
+                        <span id="totalWorkers" class="text-gray-600 font-medium"
+                            style="font-size: var(--font-size-subtitle);"></span>
+                    </div>
+                    <button id="toggleButton" class="button-secondary toggle-button">入力切替</button>
+                </div>
+
+                <!-- テーブル本体 -->
+                <div id="reportDataTable" class="table-container border rounded-xl overflow-x-auto">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>氏名</th>
+                                <th>勤怠状況</th>
+                                <th>始業時刻</th>
+                                <th>終業時刻</th>
+                                <th>備考</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="actionButtons" class="flex flex-row space-x-2 mt-2 mb-2 px-2">
+                    <button id="saveButton" class="button-secondary flex-1" disabled>保存</button>
+                    <button id="emailButton" class="button-primary flex-1" disabled>日報を送信</button>
+                </div>
+
+                <div id="submittedButtons" class="flex flex-row space-x-2 mt-2 mb-2 px-2 hidden">
+                    <button id="closeButton" class="button-primary flex-1">終了</button>
+                    <button id="submittedButton" class="button-secondary flex-1" disabled>日報送信済</button>
+                </div>
+
+                <p id="saveStatus" class="text-3xl text-center mt-6 font-bold hidden"></p>
+                <p id="emailStatus" class="text-3xl text-center mt-6 font-bold hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let currentUserRole = '';
+        let initialReportData = [];
+        let isReportSubmitted = false;
+        let isDataChanged = false;
+        let saveTimeout = null;
+
+        const DOM = {
+            loadingSpinner: document.getElementById('loadingSpinner'),
+            mainContent: document.getElementById('mainContent'),
+            userNotFoundMessage: document.getElementById('userNotFoundMessage'),
+            accessDeniedMessage: document.getElementById('accessDeniedMessage'),
+            sheetErrorMessage: document.getElementById('sheetErrorMessage'),
+            userName: document.getElementById('userName'),
+            reportDate: document.getElementById('reportDate'),
+            sheetNameSelect: document.getElementById('sheetName'),
+            reportTableBody: document.getElementById('reportTableBody'),
+            saveButton: document.getElementById('saveButton'),
+            saveStatus: document.getElementById('saveStatus'),
+            emailButton: document.getElementById('emailButton'),
+            emailStatus: document.getElementById('emailStatus'),
+            totalWorkers: document.getElementById('totalWorkers')
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            DOM.loadingSpinner.classList.remove('hidden');
+            DOM.mainContent.classList.add('hidden');
+
+            DOM.reportDate.addEventListener('change', () => fetchAndDisplayReports());
+            DOM.sheetNameSelect.addEventListener('change', () => fetchAndDisplayReports());
+            document.getElementById('reloadButton').addEventListener('click', () => fetchAndDisplayReports());
+            document.getElementById('toggleButton').addEventListener('click', toggleAllTimeInputModes);
+            DOM.emailButton.addEventListener('click', sendReportEmailImmediately);
+            DOM.saveButton.addEventListener('click', saveReports);
+
+            document.getElementById('closeButton').addEventListener('click', function () {
+                if (!isDataChanged || confirm('未保存の変更があります。本当に画面を閉じますか？')) {
+                    window.top.close();
+                }
+            });
+
+            DOM.reportTableBody.addEventListener('click', handleRowClick);
+            DOM.reportTableBody.addEventListener('change', () => checkSaveButtonStatus());
+            DOM.reportTableBody.addEventListener('input', () => checkSaveButtonStatus());
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    DOM.loadingSpinner.classList.add('hidden');
+                    DOM.mainContent.classList.remove('hidden');
+
+                    if (response.error) {
+                        if (response.type === 'userNotFound') DOM.userNotFoundMessage.classList.remove('hidden');
+                        else if (response.type === 'accessDenied') DOM.accessDeniedMessage.classList.remove('hidden');
+                        else {
+                            DOM.sheetErrorMessage.textContent = response.message;
+                            DOM.sheetErrorMessage.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    currentUserRole = response.userData.role;
+                    DOM.userName.textContent = response.userData.name || '名前未設定';
+
+                    // 日付の初期設定 (9時以前は前日)
+                    const now = new Date();
+                    if (now.getHours() < 9) now.setDate(now.getDate() - 1);
+                    const formattedDate = now.toISOString().split('T')[0];
+                    DOM.reportDate.value = formattedDate;
+
+                    const allSheetNames = response.allSheetNames;
+                    DOM.sheetNameSelect.innerHTML = '';
+                    if (allSheetNames?.length > 0) {
+                        allSheetNames.forEach(name => {
+                            const opt = document.createElement('option');
+                            opt.value = name; opt.textContent = name;
+                            DOM.sheetNameSelect.appendChild(opt);
+                        });
+                        DOM.sheetNameSelect.value = response.initialSheetName || allSheetNames[0];
+                    }
+
+                    fetchAndDisplayReports();
+                })
+                .withFailureHandler(function (error) {
+                    DOM.loadingSpinner.classList.add('hidden');
+                    DOM.sheetErrorMessage.textContent = '初期データ取得失敗: ' + error.message;
+                    DOM.sheetErrorMessage.classList.remove('hidden');
+                })
+                .getInitialData();
+        });
+
+        function fetchAndDisplayReports() {
+            const reportDate = DOM.reportDate.value;
+            const sheetName = DOM.sheetNameSelect.value;
+            if (!reportDate || !sheetName) return;
+
+            DOM.loadingSpinner.classList.remove('hidden');
+            DOM.mainContent.classList.add('hidden');
+            DOM.saveStatus.classList.add('hidden');
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    DOM.loadingSpinner.classList.add('hidden');
+                    DOM.mainContent.classList.remove('hidden');
+                    if (response.error) {
+                        alert('エラー: ' + response.message);
+                        return;
+                    }
+                    isReportSubmitted = response.isReportSubmitted;
+                    displayReportData(response.reportData || [], isReportSubmitted);
+                    initialReportData = getReportDataFromDOM();
+                    updateButtonStates(isReportSubmitted);
+                    checkSaveButtonStatus();
+                })
+                .withFailureHandler(function (error) {
+                    DOM.loadingSpinner.classList.add('hidden');
+                    DOM.mainContent.classList.remove('hidden');
+                    alert('通信エラー: ' + error.message);
+                })
+                .searchReports(reportDate, sheetName);
+        }
+
+        function displayReportData(reports, isSubmitted = false) {
+            DOM.reportTableBody.innerHTML = '';
+            DOM.totalWorkers.textContent = `(${reports.length}名)`;
+            if (reports.length === 0) {
+                DOM.reportTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-3xl text-gray-400">データがありません</td></tr>';
+                return;
+            }
+
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.dataset.reportId = report.reportId;
+                row.dataset.reportDetailId = report.reportDetailId;
+
+                // 1. 氏名
+                const nameCell = document.createElement('td');
+                nameCell.className = 'font-bold text-gray-900 name-cell';
+                nameCell.textContent = report.name;
+
+                // 2. 勤怠状況
+                const statusCell = document.createElement('td');
+                const statusSelect = document.createElement('select');
+                statusSelect.className = 'input-field';
+                statusSelect.disabled = isSubmitted;
+                ['', '遅刻', '早退', '欠勤', '応援', '休'].forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s; opt.textContent = s || '-';
+                    statusSelect.appendChild(opt);
+                });
+                statusSelect.value = report.status || '';
+                statusCell.appendChild(statusSelect);
+
+                // 3 & 4. 時刻
+                const startTimes = ["", "07:30", "07:45", "07:50", "08:00", "08:15", "08:30", "08:45", "09:00", "09:15", "09:30"];
+                const endTimes = ["", "16:20", "17:00", "17:15", "17:30", "17:45", "18:00", "18:15", "18:30", "19:00"];
+
+                const isRestOrAbsent = ['欠勤', '応援', '休'].includes(report.status);
+                const startTimeCell = createTimeInputCell(isRestOrAbsent ? '' : report.startTime, startTimes, isSubmitted || isRestOrAbsent);
+                const endTimeCell = createTimeInputCell(isRestOrAbsent ? '' : report.endTime, endTimes, isSubmitted || isRestOrAbsent);
+
+                // 5. 備考
+                const commentsCell = document.createElement('td');
+                const commentsInput = document.createElement('input');
+                commentsInput.type = 'text';
+                commentsInput.className = 'input-field';
+                commentsInput.value = report.comments || '';
+                commentsInput.disabled = isSubmitted || isRestOrAbsent;
+                commentsCell.appendChild(commentsInput);
+
+                row.appendChild(nameCell);
+                row.appendChild(statusCell);
+                row.appendChild(startTimeCell);
+                row.appendChild(endTimeCell);
+                row.appendChild(commentsCell);
+                DOM.reportTableBody.appendChild(row);
+
+                // イベント適用
+                setStatusColor(statusSelect);
+                updateRowHighlight(row);
+
+                statusSelect.addEventListener('change', () => {
+                    const s = statusSelect.value;
+                    const disable = ['欠勤', '応援', '休'].includes(s);
+                    const rowInputs = row.querySelectorAll('input, select:not(:first-child)');
+                    rowInputs.forEach(i => {
+                        i.disabled = isSubmitted || disable;
+                        if (disable) i.value = '';
+                    });
+                    setStatusColor(statusSelect);
+                    updateRowHighlight(row);
+                });
+            });
+        }
+
+        function createTimeInputCell(value, options, disabled) {
+            const cell = document.createElement('td');
+            const container = document.createElement('div');
+            container.className = 'time-input-container';
+
+            const select = document.createElement('select');
+            select.className = 'input-field time-select';
+            select.disabled = disabled;
+            options.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t; opt.textContent = t || '--:--';
+                select.appendChild(opt);
+            });
+
+            const input = document.createElement('input');
+            input.type = 'time';
+            input.className = 'input-field time-picker hidden';
+            input.disabled = disabled;
+
+            if (options.includes(value)) select.value = value;
+            else if (value) {
+                const opt = document.createElement('option');
+                opt.value = value; opt.textContent = value;
+                select.insertBefore(opt, select.firstChild);
+                select.value = value;
+            }
+            input.value = value;
+
+            container.appendChild(select);
+            container.appendChild(input);
+            cell.appendChild(container);
+            return cell;
+        }
+
+        function getReportDataFromDOM() {
+            const data = [];
+            DOM.reportTableBody.querySelectorAll('tr').forEach(row => {
+                if (!row.dataset.reportDetailId) return;
+                const status = row.querySelector('td:nth-child(2) select').value;
+                const startTime = row.querySelector('td:nth-child(3) .time-input-container > *:not(.hidden)').value;
+                const endTime = row.querySelector('td:nth-child(4) .time-input-container > *:not(.hidden)').value;
+                const comments = row.querySelector('td:nth-child(5) input').value;
+                data.push({
+                    reportDetailId: row.dataset.reportDetailId,
+                    reportId: row.dataset.reportId,
+                    status, startTime, endTime, comments
+                });
+            });
+            return data;
+        }
+
+        function setStatusColor(select) {
+            const v = select.value;
+            if (['欠勤', '遅刻', '早退'].includes(v)) select.style.color = 'red';
+            else if (['応援', '休', '公休'].includes(v)) select.style.color = 'blue';
+            else select.style.color = '';
+        }
+
+        function updateRowHighlight(row) {
+            // 必要に応じて背景色を変えるロジック
+            const status = row.querySelector('td:nth-child(2) select').value;
+            row.classList.remove('bg-red-50');
+            if (['欠勤', '遅刻'].includes(status)) row.classList.add('bg-red-50');
+        }
+
+        function toggleAllTimeInputModes() {
+            if (isReportSubmitted) return;
+            DOM.reportTableBody.querySelectorAll('.time-input-container').forEach(c => {
+                const s = c.querySelector('.time-select');
+                const p = c.querySelector('.time-picker');
+                if (s.classList.contains('hidden')) {
+                    s.value = p.value; s.classList.remove('hidden'); p.classList.add('hidden');
+                } else {
+                    p.value = s.value; s.classList.add('hidden'); p.classList.remove('hidden');
+                }
+            });
+        }
+
+        function checkSaveButtonStatus() {
+            const currentReportData = getReportDataFromDOM();
+            const changed = JSON.stringify(currentReportData) !== JSON.stringify(initialReportData);
+            isDataChanged = changed;
+
+            if (isReportSubmitted) { 
+                DOM.saveButton.disabled = true; 
+                DOM.saveStatus.textContent = '';
+                DOM.saveStatus.classList.add('hidden');
+                DOM.emailButton.disabled = true;
+                DOM.emailButton.classList.remove('button-primary');
+                DOM.emailButton.classList.add('button-secondary');
+                return; 
+            }
+            
+            DOM.saveButton.disabled = !changed;
+            DOM.saveStatus.textContent = changed ? '未保存の変更があります' : '';
+            DOM.saveStatus.classList.toggle('hidden', !changed);
+            DOM.saveStatus.style.color = 'red';
+
+            const canSubmit = currentReportData.length > 0 && currentReportData.every(detail => {
+                const status = detail.status || '';
+                const startTime = detail.startTime || '';
+                const endTime = detail.endTime || '';
+                if (['欠勤', '応援', '休'].includes(status)) return true;
+                return startTime !== '' && endTime !== '';
+            });
+
+            if (changed || !canSubmit) {
+                DOM.emailButton.disabled = true;
+                DOM.emailButton.classList.remove('button-primary');
+                DOM.emailButton.classList.add('button-secondary');
+            } else {
+                DOM.emailButton.disabled = false;
+                DOM.emailButton.classList.remove('button-secondary');
+                DOM.emailButton.classList.add('button-primary');
+            }
+        }
+
+        function saveReports() {
+            if (isReportSubmitted) return;
+            DOM.saveButton.disabled = true;
+            DOM.saveButton.textContent = '保存中...';
+            google.script.run
+                .withSuccessHandler(response => {
+                    if (response.error) alert('保存失敗: ' + response.message);
+                    else {
+                        DOM.saveStatus.textContent = '保存完了！';
+                        DOM.saveStatus.style.color = 'green';
+                        initialReportData = getReportDataFromDOM();
+                        isDataChanged = false;
+                        setTimeout(() => fetchAndDisplayReports(), 2000);
+                    }
+                    DOM.saveButton.textContent = '保存';
+                })
+                .saveReports(getReportDataFromDOM());
+        }
+
+        function sendReportEmailImmediately() {
+            const reportData = getReportDataFromDOM();
+            if (!reportData.length) return;
+
+            DOM.emailButton.disabled = true;
+            DOM.emailButton.textContent = '送信中...';
+            DOM.emailStatus.textContent = '日報を送信しています...';
+            DOM.emailStatus.classList.remove('hidden');
+
+            google.script.run
+                .withSuccessHandler(result => {
+                    if (result.status === 'success') {
+                        DOM.emailStatus.textContent = '送信完了しました';
+                        isReportSubmitted = true;
+                        updateButtonStates(true);
+                    } else {
+                        DOM.emailStatus.textContent = '送信失敗: ' + result.message;
+                        DOM.emailButton.disabled = false;
+                    }
+                    DOM.emailButton.textContent = '日報を送信';
+                })
+                .recordReportLogFromWebappAndCreateTrigger(reportData[0].reportId, DOM.sheetNameSelect.value);
+        }
+
+        function updateButtonStates(isSubmitted) {
+            document.getElementById('actionButtons').classList.toggle('hidden', isSubmitted);
+            document.getElementById('submittedButtons').classList.toggle('hidden', !isSubmitted);
+            if (!isSubmitted) DOM.emailButton.disabled = false;
+        }
+
+        function handleRowClick(e) {
+            const row = e.target.closest('tr');
+            if (!row) return;
+            DOM.reportTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('selected-row'));
+            row.classList.add('selected-row');
+        }
+    </script>
+</body>
+
+</html>
