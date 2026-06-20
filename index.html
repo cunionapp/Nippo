@@ -597,6 +597,7 @@
                 })
                 .withFailureHandler(function (error) {
                     DOM.loadingSpinner.classList.add('hidden');
+                    DOM.mainContent.classList.remove('hidden');
                     DOM.sheetErrorMessage.textContent = '初期データ取得失敗: ' + error.message;
                     DOM.sheetErrorMessage.classList.remove('hidden');
                 })
