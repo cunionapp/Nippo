@@ -4,7 +4,7 @@
 <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#ffffff">
     <!-- 追加: サーバー通信用のブリッジスクリプト -->
     <script src="gas-client-bridge.js"></script>
     <title>打刻</title>
@@ -16,14 +16,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         html {
-            background-color: var(--color-primary);
+            background-color: #f3f4f6;
             margin: 0;
             padding: 0;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--color-primary);
+            background-color: #f3f4f6;
             margin: 0;
             padding: 0;
             color: #1f2937;
@@ -35,15 +35,25 @@
             flex-direction: column;
             background-color: #f3f4f6;
             overflow: hidden;
+            max-width: 1024px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .header-area {
-            background-color: var(--color-primary);
-            color: #fff;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #1f2937;
             padding: 0.75rem 1rem;
             padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
             flex-shrink: 0;
-            border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-area p {
+            color: #4b5563;
         }
 
         .header-top {
@@ -56,16 +66,25 @@
             font-size: 1.25rem;
             font-weight: 700;
             margin: 0;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .btn-link {
             font-size: 0.875rem;
-            background: white;
-            color: var(--color-primary);
+            background: #eff6ff;
+            color: #2563eb;
             padding: 0.375rem 0.75rem;
             border-radius: 0.375rem;
             text-decoration: none;
             font-weight: 600;
+            border: 1px solid #dbeafe;
+            transition: all 0.2s;
+        }
+
+        .btn-link:hover {
+            background: #dbeafe;
         }
 
         .main-panel {
@@ -275,11 +294,58 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            setupNavigation();
             startLocalClock();
             loadPunchData();
             DOM.btnIn.addEventListener('click', () => registerPunch('in'));
             DOM.btnOut.addEventListener('click', () => registerPunch('out'));
         });
+
+        function setupNavigation() {
+            const isGasEnv = (window.location.hostname.indexOf('google') !== -1);
+            const punchLinks = document.querySelectorAll('a[href*="punch.html"], a[href*="punch"]');
+            const timecardLinks = document.querySelectorAll('a[href*="timecard.html"], a[href*="timecard"]');
+            const nippoLinks = document.querySelectorAll('a[href*="index.html"], a[href*="index"]');
+
+            if (isGasEnv) {
+                const currentUrl = window.location.href;
+                const getGasUrl = (pageVal) => {
+                    const url = new URL(currentUrl);
+                    if (pageVal) {
+                        url.searchParams.set('page', pageVal);
+                    } else {
+                        url.searchParams.delete('page');
+                    }
+                    return url.toString();
+                };
+
+                punchLinks.forEach(link => {
+                    link.href = getGasUrl('punch');
+                    link.target = '_top';
+                });
+                timecardLinks.forEach(link => {
+                    link.href = getGasUrl('timecard');
+                    link.target = '_top';
+                });
+                nippoLinks.forEach(link => {
+                    link.href = getGasUrl('');
+                    link.target = '_top';
+                });
+            } else {
+                punchLinks.forEach(link => {
+                    link.href = './punch.html';
+                    link.target = '_self';
+                });
+                timecardLinks.forEach(link => {
+                    link.href = './timecard.html';
+                    link.target = '_self';
+                });
+                nippoLinks.forEach(link => {
+                    link.href = './index.html';
+                    link.target = '_self';
+                });
+            }
+        }
 
         function startLocalClock() {
             updateLocalClock();
