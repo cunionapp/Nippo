@@ -19,7 +19,7 @@
   var GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyb2zGD6bxSF-WMSSQdV37vbw9vusJ_SCWDCawgd9ayOZ74bi02fKyvWlnMfn8Jhu88Xg/exec';
 
   // Google OAuth2 クライアントID
-  var GOOGLE_CLIENT_ID = '85113522675-vrervnlgtsaqgk1iippfqucc3qkips6l.apps.googleusercontent.com';
+  var GOOGLE_CLIENT_ID = '714089387828-fmba296gdli7m0tvdfp2pfmc1l2jkfds.apps.googleusercontent.com';
   // ==========================================
 
   // =============================================
