@@ -66,12 +66,20 @@
                 fetch(GAS_API_URL, {
                   method: 'POST',
                   mode: 'cors',
-                  headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                  headers: { 'Content-Type': 'text/plain' },
                   body: JSON.stringify(payload)
                 })
                   .then(function (r) {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.json();
+                    return r.text();
+                  })
+                  .then(function (text) {
+                    try {
+                      return JSON.parse(text);
+                    } catch (e) {
+                      console.error('[Bridge] サーバーからの生の応答:', text);
+                      throw new Error(text);
+                    }
                   })
                   .then(function (data) {
                     if (data.error) {
@@ -134,7 +142,7 @@
     }
 
     // 1. Tailwind CSS (存在しない場合のみロード)
-    if (typeof Tailwind !== 'undefined' || document.querySelector('script[src*="tailwindcss.com"]')) {
+    if (typeof Tailwind !== 'undefined' || document.querySelector('script[src*="tailwindcss.com"]') || typeof tailwind !== 'undefined') {
       tailwindLoaded = true;
     } else {
       var script = document.createElement('script');
@@ -152,6 +160,8 @@
     } else {
       var script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
       script.onload = function () {
         gisLoaded = true;
         checkReady();
