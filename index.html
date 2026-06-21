@@ -11,290 +11,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="UNI日報">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 追加: サーバー通信用のブリッジスクリプト -->
+    <!-- サーバー通信用のブリッジスクリプト -->
     <script src="gas-client-bridge.js"></script>
-    <title>作業者日報</title>
+    <title>UNI日報アプリ</title>
     <style>
-        :root {
-            --font-size-app-title: 1.25rem;
-            --font-size-user-name: 0.875rem;
-            --font-size-label: 0.875rem;
-            --font-size-input: 0.875rem;
-            --font-size-subtitle: 1.1rem;
-            --font-size-table-header: 0.85rem;
-            --font-size-table-cell: 0.85rem;
-            --font-size-name-cell: 0.85rem;
-            --font-size-toggle-button: 0.85rem;
-            --color-primary: #2563eb;
-            --input-font-size: 14px;
-        }
-
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        html {
-            background-color: #f3f4f6;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            width: 100%;
-            height: 100dvh;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-
-        .app-container {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: #f3f4f6;
-            max-width: 1024px;
-            margin: 0 auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: #f3f4f6;
-        }
-
-        #mainContent {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        #mainContent.hidden {
-            display: none !important;
-        }
-
-        .header-area {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            color: #1f2937;
-            padding: 0.75rem 1rem;
-            padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-title {
-            font-size: var(--font-size-app-title);
-            font-weight: 700;
-            margin: 0;
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: var(--font-size-user-name);
-            margin-top: 0.5rem;
-            color: #4b5563;
-        }
-
-        .btn-link {
-            background: #eff6ff;
-            color: #2563eb;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: var(--font-size-toggle-button);
-            border: 1px solid #dbeafe;
-            transition: all 0.2s;
-        }
-
-        .btn-link:hover {
-            background: #dbeafe;
-        }
-
-        .button-primary,
-        .button-secondary {
-            border-radius: 8px;
-            transition: background-color 0.2s;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-        }
-
-        .button-primary {
-            background-color: #2563eb;
-            color: #ffffff;
-        }
-
-        .button-secondary {
-            background-color: #e5e7eb;
-            color: #374151;
-        }
-
-        .button-primary:hover {
-            background-color: #1e40af;
-        }
-
-        .button-secondary:hover {
-            background-color: #d1d5db;
-        }
-
-        .button-primary:disabled {
-            background-color: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        .button-secondary:disabled {
-            background-color: #d1d5db;
-            color: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        .input-field {
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            padding: 0.25rem 0.5rem;
-            font-size: var(--input-font-size) !important;
-            min-height: 36px;
-            background-color: #f5f5f5;
-            width: 100%;
-            text-align: center;
-            text-align-last: center;
-            box-sizing: border-box;
-        }
-
-        .p-4 {
-            padding: 1rem;
-        }
-
-        .p-6 {
-            padding: 1.5rem;
-        }
-
-        .text-xs {
-            font-size: 0.75rem;
-        }
-
-        .text-sm {
-            font-size: 0.875rem;
-        }
-
-        .text-base {
-            font-size: 1rem;
-        }
-
-        .text-xl {
-            font-size: 1.125rem;
-        }
-
-        .text-2xl {
-            font-size: 1.25rem;
-        }
-
-        .text-3xl {
-            font-size: 1.5rem;
-        }
-
-        .table-container {
-            flex: 1;
-            min-height: 0;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .report-table {
-            table-layout: fixed;
-            width: 100%;
-            min-width: 800px;
-            border-collapse: collapse;
-        }
-
-        .report-table th {
-            font-size: var(--font-size-table-header);
-            white-space: nowrap;
-            background-color: #f9fafb;
-            color: #6b7280;
-            padding: 0.75rem 0.5rem;
-            text-align: center;
-            border-bottom: 2px solid #e5e7eb;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .report-table td {
-            font-size: var(--font-size-table-cell);
-            padding: 0.5rem 0.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            vertical-align: middle;
-        }
-
-        .report-table th:nth-child(1),
-        .report-table td:nth-child(1) {
-            width: 120px;
-        }
-
-        .report-table th:nth-child(2),
-        .report-table td:nth-child(2) {
-            width: 120px;
-        }
-
-        .report-table th:nth-child(3),
-        .report-table td:nth-child(3) {
-            width: 140px;
-        }
-
-        .report-table th:nth-child(4),
-        .report-table td:nth-child(4) {
-            width: 140px;
-        }
-
-        .report-table th:nth-child(5),
-        .report-table td:nth-child(5) {
-            width: auto;
-        }
-
-        .toggle-button {
-            padding: 0.4rem 0.8rem;
-            font-size: var(--font-size-toggle-button);
-            border-radius: 8px;
-            min-height: 32px;
-        }
-
-        .report-data-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-        }
-
         /* Base Mobile-first style */
         :root {
             --font-size-app-title: 1.125rem;
@@ -308,6 +28,8 @@
             --font-size-status-select: 0.75rem;
             --font-size-toggle-button: 0.75rem;
             --input-font-size: 13px;
+            --color-primary: #2563eb;
+            --color-bg: #f3f4f6;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -347,14 +69,15 @@
             background-color: #f3f4f6;
         }
 
-        #mainContent {
+        /* 画面セクションの定義 */
+        .view-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        #mainContent.hidden {
+        .view-section.hidden {
             display: none !important;
         }
 
@@ -405,6 +128,7 @@
             font-size: var(--font-size-toggle-button);
             border: 1px solid #dbeafe;
             transition: all 0.2s;
+            cursor: pointer;
         }
 
         .btn-link:hover {
@@ -582,6 +306,249 @@
             padding: 0.5rem 0;
         }
 
+        /* タイムカード用のCSSスタイル */
+        .table-wrapper {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0;
+        }
+
+        .row-today td {
+            background-color: #dbeafe !important;
+        }
+
+        .row-today td:first-child {
+            box-shadow: inset 3px 0 0 0 var(--color-primary);
+        }
+
+        .cell-text {
+            display: block;
+            width: 100%;
+            padding: 0.15rem 2px;
+            font-size: var(--font-size-table-cell);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .timecard-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .timecard-table th {
+            background-color: #f9fafb;
+            font-size: var(--font-size-table-header);
+            text-transform: uppercase;
+            color: #6b7280;
+            padding: 0.25rem 2px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 2px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .timecard-table th:first-child {
+            border-left: 1px solid #e5e7eb;
+        }
+
+        .timecard-table th:last-child {
+            border-right: none;
+        }
+
+        .timecard-table td {
+            padding: 0;
+            border-bottom: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            font-size: var(--font-size-table-cell);
+            vertical-align: middle;
+            background-color: #fff;
+            height: 2rem;
+            text-align: center;
+        }
+
+        .timecard-table td:first-child {
+            border-left: 1px solid #e5e7eb;
+        }
+
+        .timecard-table td:last-child {
+            border-right: none;
+        }
+
+        .w-sun {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .w-sat {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: #f3f4f6;
+            padding: 0.125rem 0.375rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-nav {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-nav:hover {
+            background: #f9fafb;
+            color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .current-month {
+            font-size: var(--font-size-subtitle);
+            font-weight: 700;
+            white-space: nowrap;
+            color: #1f2937;
+        }
+
+        /* 打刻用のCSSスタイル */
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+            overflow: auto;
+        }
+
+        .clock-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .clock-date {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .clock-time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-top: 0.5rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .history-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+        }
+
+        .history-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .history-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 1rem;
+        }
+
+        .history-list li:last-child {
+            border-bottom: none;
+        }
+
+        .history-empty {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+
+        .punch-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: auto;
+        }
+
+        .btn-punch {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 1.25rem 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            transition: opacity 0.2s;
+        }
+
+        .btn-punch:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-in {
+            background-color: #16a34a;
+        }
+
+        .btn-out {
+            background-color: #dc2626;
+        }
+
+        .status-message {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #b45309;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+
+        .feedback-message {
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            min-height: 1.25rem;
+        }
+
         /* PC (Desktop) styling overrides */
         @media (min-width: 768px) {
             :root {
@@ -607,6 +574,7 @@
                 padding: 0.75rem 1rem;
                 padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
                 position: sticky;
+                top: 0;
             }
 
             .btn-link {
@@ -730,27 +698,36 @@
         <!-- 統一ヘッダー -->
         <header class="header-area">
             <div class="header-top">
-                <h1 class="header-title">作業者日報</h1>
+                <h1 id="appHeaderTitle" class="header-title">UNI日報アプリ</h1>
                 <div style="display: flex; gap: 0.5rem;">
-                    <a href="./punch.html" class="btn-link">打刻へ</a>
-                    <a href="./timecard.html" class="btn-link">タイムカードへ</a>
+                    <a onclick="switchView('punch')" class="btn-link">打刻</a>
+                    <a onclick="switchView('timecard')" class="btn-link">タイムカード</a>
+                    <a id="nippoLink" onclick="switchView('nippo')" class="btn-link hidden">日報入力</a>
                 </div>
             </div>
             <div class="header-nav">
-                <div>氏名: <span id="userName" class="font-bold"></span></div>
+                <div>氏名: <span id="userName" class="font-bold">読み込み中...</span></div>
+                <div id="timecardSubHeader" class="hidden">
+                    <div class="month-selector">
+                        <button id="prevMonthBtn" class="btn-nav">＜</button>
+                        <h2 id="currentMonthLabel" class="current-month">----年 --月</h2>
+                        <button id="nextMonthBtn" class="btn-nav">＞</button>
+                    </div>
+                </div>
             </div>
         </header>
 
         <div class="card p-6" style="padding-top: 0;">
+            <!-- 共通ローディングスピナー -->
             <div id="loadingSpinner" class="fixed inset-0 bg-[#f3f4f6] flex flex-col items-center justify-center z-[100]">
                 <div class="spinner"></div>
                 <p class="text-xl text-gray-600 mt-4" style="font-size: 1.5rem; font-weight: bold;">読み込み中...</p>
             </div>
 
-            <div id="mainContent" class="hidden">
+            <!-- ① 日報入力ビュー -->
+            <div id="view-nippo" class="view-section hidden">
                 <div id="errorMessages">
-                    <p id="userNotFoundMessage" class="text-3xl text-red-600 text-center mt-2 hidden">ユーザー情報が見つかりません。
-                    </p>
+                    <p id="userNotFoundMessage" class="text-3xl text-red-600 text-center mt-2 hidden">ユーザー情報が見つかりません。</p>
                     <p id="accessDeniedMessage" class="text-3xl text-red-600 text-center mt-2 hidden">利用権限がありません。</p>
                     <p id="sheetErrorMessage" class="text-3xl text-red-600 text-center mt-2 hidden"></p>
                 </div>
@@ -811,24 +788,87 @@
                 <p id="saveStatus" class="text-3xl text-center mt-6 font-bold hidden"></p>
                 <p id="emailStatus" class="text-3xl text-center mt-6 font-bold hidden"></p>
             </div>
+
+            <!-- ② タイムカードビュー -->
+            <div id="view-timecard" class="view-section hidden">
+                <div id="timecardErrorMessage"
+                    class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4 text-center flex-shrink-0"></div>
+
+                <div class="table-wrapper border rounded-xl overflow-x-auto mt-2">
+                    <table class="timecard-table">
+                        <thead>
+                            <tr>
+                                <th class="w-8">確定</th>
+                                <th class="w-8">日付</th>
+                                <th class="w-8">曜日</th>
+                                <th class="w-16">勤怠状況</th>
+                                <th class="w-20">開始</th>
+                                <th class="w-20">終了</th>
+                                <th class="min-w-xs">備考</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timecardBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ③ 打刻ビュー -->
+            <div id="view-punch" class="view-section hidden">
+                <div class="main-panel">
+                    <div class="clock-card">
+                        <div id="clockDate" class="clock-date">----年--月--日（-）</div>
+                        <div id="clockTime" class="clock-time">--:--:--</div>
+                    </div>
+
+                    <div id="statusMessage" class="status-message hidden"></div>
+
+                    <div class="history-card">
+                        <div class="history-title">本日の出退勤</div>
+                        <ul id="historyList" class="history-list"></ul>
+                    </div>
+
+                    <p id="feedbackMessage" class="feedback-message"></p>
+
+                    <div class="punch-buttons">
+                        <button id="btnClockIn" class="btn-punch btn-in" type="button">出勤</button>
+                        <button id="btnClockOut" class="btn-punch btn-out" type="button">退勤</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // グローバル変数
+        // SPA用グローバル状態
+        let currentView = 'punch';
         let currentUserRole = '';
         let initialReportData = [];
         let isReportSubmitted = false;
         let isDataChanged = false;
-        let saveTimeout = null;
+
+        // タイムカード用状態
+        let currentDateObj = new Date();
+        let currentYear = currentDateObj.getFullYear();
+        let currentMonth = currentDateObj.getMonth() + 1;
+        let isTimeCardLoading = false;
+
+        // 打刻用状態
+        let canPunch = false;
+        let clockTimer = null;
 
         const DOM = {
             loadingSpinner: document.getElementById('loadingSpinner'),
-            mainContent: document.getElementById('mainContent'),
+            userName: document.getElementById('userName'),
+            nippoLink: document.getElementById('nippoLink'),
+            timecardSubHeader: document.getElementById('timecardSubHeader'),
+            appHeaderTitle: document.getElementById('appHeaderTitle'),
+
+            // 日報
+            viewNippo: document.getElementById('view-nippo'),
             userNotFoundMessage: document.getElementById('userNotFoundMessage'),
             accessDeniedMessage: document.getElementById('accessDeniedMessage'),
             sheetErrorMessage: document.getElementById('sheetErrorMessage'),
-            userName: document.getElementById('userName'),
             reportDate: document.getElementById('reportDate'),
             sheetNameSelect: document.getElementById('sheetName'),
             reportTableBody: document.getElementById('reportTableBody'),
@@ -836,35 +876,64 @@
             saveStatus: document.getElementById('saveStatus'),
             emailButton: document.getElementById('emailButton'),
             emailStatus: document.getElementById('emailStatus'),
-            totalWorkers: document.getElementById('totalWorkers')
+            totalWorkers: document.getElementById('totalWorkers'),
+
+            // タイムカード
+            viewTimecard: document.getElementById('view-timecard'),
+            timecardBody: document.getElementById('timecardBody'),
+            timecardErrorMessage: document.getElementById('timecardErrorMessage'),
+            monthLabel: document.getElementById('currentMonthLabel'),
+            prevMonthBtn: document.getElementById('prevMonthBtn'),
+            nextMonthBtn: document.getElementById('nextMonthBtn'),
+
+            // 打刻
+            viewPunch: document.getElementById('view-punch'),
+            clockDate: document.getElementById('clockDate'),
+            clockTime: document.getElementById('clockTime'),
+            historyList: document.getElementById('historyList'),
+            statusMessage: document.getElementById('statusMessage'),
+            feedbackMessage: document.getElementById('feedbackMessage'),
+            btnIn: document.getElementById('btnClockIn'),
+            btnOut: document.getElementById('btnClockOut')
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-            setupNavigation();
-            DOM.loadingSpinner.classList.remove('hidden');
-            DOM.mainContent.classList.add('hidden');
-
+            // イベントリスナー登録
+            // 日報
             DOM.reportDate.addEventListener('change', () => fetchAndDisplayReports());
             DOM.sheetNameSelect.addEventListener('change', () => fetchAndDisplayReports());
             document.getElementById('reloadButton').addEventListener('click', () => fetchAndDisplayReports());
             document.getElementById('toggleButton').addEventListener('click', toggleAllTimeInputModes);
             DOM.emailButton.addEventListener('click', sendReportEmailImmediately);
             DOM.saveButton.addEventListener('click', saveReports);
-
             document.getElementById('closeButton').addEventListener('click', function () {
                 if (!isDataChanged || confirm('未保存の変更があります。本当に画面を閉じますか？')) {
                     window.top.close();
                 }
             });
-
             DOM.reportTableBody.addEventListener('click', handleRowClick);
             DOM.reportTableBody.addEventListener('change', () => checkSaveButtonStatus());
             DOM.reportTableBody.addEventListener('input', () => checkSaveButtonStatus());
 
+            // タイムカード
+            DOM.prevMonthBtn.addEventListener('click', () => changeMonth(-1));
+            DOM.nextMonthBtn.addEventListener('click', () => changeMonth(1));
+
+            // 打刻
+            startLocalClock();
+            DOM.btnIn.addEventListener('click', () => registerPunch('in'));
+            DOM.btnOut.addEventListener('click', () => registerPunch('out'));
+
+            // 初期データ取得
+            initApp();
+        });
+
+        function initApp() {
+            DOM.loadingSpinner.classList.remove('hidden');
+
             google.script.run
                 .withSuccessHandler(function (response) {
                     DOM.loadingSpinner.classList.add('hidden');
-                    DOM.mainContent.classList.remove('hidden');
 
                     if (response.error) {
                         if (response.type === 'userNotFound') DOM.userNotFoundMessage.classList.remove('hidden');
@@ -873,11 +942,13 @@
                             DOM.sheetErrorMessage.textContent = response.message;
                             DOM.sheetErrorMessage.classList.remove('hidden');
                         }
+                        switchView('nippo');
                         return;
                     }
 
                     currentUserRole = response.userData.role;
-                    DOM.userName.textContent = response.userData.name || '名前未設定';
+                    const userNameStr = response.userData.name || '名前未設定';
+                    DOM.userName.textContent = userNameStr;
 
                     // 日付の初期設定 (9時以前は前日)
                     const now = new Date();
@@ -896,76 +967,83 @@
                         DOM.sheetNameSelect.value = response.initialSheetName || allSheetNames[0];
                     }
 
-                    fetchAndDisplayReports();
+                    // 権限判定による日報ボタン表示制御
+                    if (currentUserRole && currentUserRole !== '作業者') {
+                        DOM.nippoLink.classList.remove('hidden');
+                    } else {
+                        DOM.nippoLink.classList.add('hidden');
+                    }
+
+                    // URLパラメータまたはハッシュによる初期遷移先の決定
+                    determineInitialView();
                 })
                 .withFailureHandler(function (error) {
                     DOM.loadingSpinner.classList.add('hidden');
-                    DOM.mainContent.classList.remove('hidden');
-                    DOM.sheetErrorMessage.textContent = '初期データ取得失敗: ' + error.message;
-                    DOM.sheetErrorMessage.classList.remove('hidden');
+                    alert('初期データ取得失敗: ' + error.message);
                 })
                 .getInitialData();
-        });
-
-        function setupNavigation() {
-            const isGasEnv = (window.location.hostname.indexOf('google') !== -1);
-            const punchLinks = document.querySelectorAll('a[href*="punch.html"], a[href*="punch"]');
-            const timecardLinks = document.querySelectorAll('a[href*="timecard.html"], a[href*="timecard"]');
-            const nippoLinks = document.querySelectorAll('a[href*="index.html"], a[href*="index"]');
-
-            if (isGasEnv) {
-                const currentUrl = window.location.href;
-                const getGasUrl = (pageVal) => {
-                    const url = new URL(currentUrl);
-                    if (pageVal) {
-                        url.searchParams.set('page', pageVal);
-                    } else {
-                        url.searchParams.delete('page');
-                    }
-                    return url.toString();
-                };
-
-                punchLinks.forEach(link => {
-                    link.href = getGasUrl('punch');
-                    link.target = '_top';
-                });
-                timecardLinks.forEach(link => {
-                    link.href = getGasUrl('timecard');
-                    link.target = '_top';
-                });
-                nippoLinks.forEach(link => {
-                    link.href = getGasUrl('');
-                    link.target = '_top';
-                });
-            } else {
-                punchLinks.forEach(link => {
-                    link.href = './punch.html';
-                    link.target = '_self';
-                });
-                timecardLinks.forEach(link => {
-                    link.href = './timecard.html';
-                    link.target = '_self';
-                });
-                nippoLinks.forEach(link => {
-                    link.href = './index.html';
-                    link.target = '_self';
-                });
-            }
         }
 
+        function determineInitialView() {
+            const params = new URLSearchParams(window.location.search);
+            const pageParam = params.get('page');
+            const hashParam = window.location.hash.replace('#', '');
+            const targetView = pageParam || hashParam || 'punch';
+
+            switchView(targetView);
+        }
+
+        function switchView(viewName) {
+            // 未保存の日報データがある場合の警告
+            if (currentView === 'nippo' && isDataChanged) {
+                if (!confirm('変更内容が保存されていません。別の画面に移動しますか？')) {
+                    return;
+                }
+            }
+
+            currentView = viewName;
+            
+            // 全ビュー非表示
+            DOM.viewNippo.classList.add('hidden');
+            DOM.viewTimecard.classList.add('hidden');
+            DOM.viewPunch.classList.add('hidden');
+            DOM.timecardSubHeader.classList.add('hidden');
+
+            // 選択されたビューを表示
+            if (viewName === 'nippo') {
+                DOM.appHeaderTitle.textContent = '作業者日報';
+                DOM.viewNippo.classList.remove('hidden');
+                fetchAndDisplayReports();
+            } else if (viewName === 'timecard') {
+                DOM.appHeaderTitle.textContent = 'タイムカード';
+                DOM.viewTimecard.classList.remove('hidden');
+                DOM.timecardSubHeader.classList.remove('hidden');
+                renderMonthLabel();
+                fetchTimeCardData();
+            } else {
+                DOM.appHeaderTitle.textContent = '打刻';
+                DOM.viewPunch.classList.remove('hidden');
+                loadPunchData();
+            }
+
+            // iOS WebClip等での遷移体験のためハッシュを更新
+            window.location.hash = viewName;
+        }
+
+        // ==========================================
+        // ① 日報入力ロジック
+        // ==========================================
         function fetchAndDisplayReports() {
             const reportDate = DOM.reportDate.value;
             const sheetName = DOM.sheetNameSelect.value;
             if (!reportDate || !sheetName) return;
 
             DOM.loadingSpinner.classList.remove('hidden');
-            DOM.mainContent.classList.add('hidden');
             DOM.saveStatus.classList.add('hidden');
 
             google.script.run
                 .withSuccessHandler(function (response) {
                     DOM.loadingSpinner.classList.add('hidden');
-                    DOM.mainContent.classList.remove('hidden');
                     if (response.error) {
                         alert('エラー: ' + response.message);
                         return;
@@ -978,7 +1056,6 @@
                 })
                 .withFailureHandler(function (error) {
                     DOM.loadingSpinner.classList.add('hidden');
-                    DOM.mainContent.classList.remove('hidden');
                     alert('通信エラー: ' + error.message);
                 })
                 .searchReports(reportDate, sheetName);
@@ -988,7 +1065,7 @@
             DOM.reportTableBody.innerHTML = '';
             DOM.totalWorkers.textContent = `(${reports.length}名)`;
             if (reports.length === 0) {
-                DOM.reportTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-3xl text-gray-400">データがありません</td></tr>';
+                DOM.reportTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-xl text-gray-400">データがありません</td></tr>';
                 return;
             }
 
@@ -1000,7 +1077,7 @@
 
                 // 1. 氏名
                 const nameCell = document.createElement('td');
-                nameCell.className = 'font-bold text-gray-900 name-cell';
+                nameCell.className = 'font-bold text-gray-900 name-cell text-center';
                 nameCell.textContent = report.name;
 
                 // 2. 勤怠状況
@@ -1097,8 +1174,8 @@
             DOM.reportTableBody.querySelectorAll('tr').forEach(row => {
                 if (!row.dataset.reportDetailId) return;
                 const status = row.querySelector('td:nth-child(2) select').value;
-                const startTime = row.querySelector('td:nth-child(3) .time-input-container > *:not(.hidden)').value;
-                const endTime = row.querySelector('td:nth-child(4) .time-input-container > *:not(.hidden)').value;
+                const startTime = row.querySelector('td:nth-child(3) select, td:nth-child(3) input:not(.hidden)').value;
+                const endTime = row.querySelector('td:nth-child(4) select, td:nth-child(4) input:not(.hidden)').value;
                 const comments = row.querySelector('td:nth-child(5) input').value;
                 data.push({
                     reportDetailId: row.dataset.reportDetailId,
@@ -1117,7 +1194,6 @@
         }
 
         function updateRowHighlight(row) {
-            // 必要に応じて背景色を変えるロジック
             const status = row.querySelector('td:nth-child(2) select').value;
             row.classList.remove('bg-red-50');
             if (['欠勤', '遅刻'].includes(status)) row.classList.add('bg-red-50');
@@ -1141,16 +1217,16 @@
             const changed = JSON.stringify(currentReportData) !== JSON.stringify(initialReportData);
             isDataChanged = changed;
 
-            if (isReportSubmitted) { 
-                DOM.saveButton.disabled = true; 
+            if (isReportSubmitted) {
+                DOM.saveButton.disabled = true;
                 DOM.saveStatus.textContent = '';
                 DOM.saveStatus.classList.add('hidden');
                 DOM.emailButton.disabled = true;
                 DOM.emailButton.classList.remove('button-primary');
                 DOM.emailButton.classList.add('button-secondary');
-                return; 
+                return;
             }
-            
+
             DOM.saveButton.disabled = !changed;
             DOM.saveStatus.textContent = changed ? '未保存の変更があります' : '';
             DOM.saveStatus.classList.toggle('hidden', !changed);
@@ -1229,6 +1305,230 @@
             if (!row) return;
             DOM.reportTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('selected-row'));
             row.classList.add('selected-row');
+        }
+
+        // ==========================================
+        // ② タイムカードロジック
+        // ==========================================
+        function getTodayDateKey() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function changeMonth(delta) {
+            if (isTimeCardLoading) return;
+            let d = new Date(currentYear, currentMonth - 1 + delta, 1);
+            currentYear = d.getFullYear();
+            currentMonth = d.getMonth() + 1;
+            renderMonthLabel();
+            fetchTimeCardData();
+        }
+
+        function renderMonthLabel() {
+            DOM.monthLabel.textContent = `${currentYear}年 ${String(currentMonth).padStart(2, '0')}月`;
+        }
+
+        function showTimeCardLoading(show) {
+            isTimeCardLoading = show;
+            if (show) {
+                DOM.loadingSpinner.classList.remove('hidden');
+                DOM.timecardErrorMessage.classList.add('hidden');
+            } else {
+                DOM.loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        function appendTextCell(tr, text, extraClass) {
+            const cell = document.createElement('td');
+            cell.className = 'text-center align-middle' + (extraClass ? ' ' + extraClass : '');
+            const span = document.createElement('span');
+            span.className = 'cell-text';
+            span.textContent = text || '-';
+            cell.appendChild(span);
+            tr.appendChild(cell);
+            return cell;
+        }
+
+        function showTimeCardError(msg) {
+            DOM.timecardErrorMessage.textContent = msg;
+            DOM.timecardErrorMessage.classList.remove('hidden');
+            DOM.loadingSpinner.classList.add('hidden');
+        }
+
+        function fetchTimeCardData() {
+            showTimeCardLoading(true);
+
+            google.script.run
+                .withSuccessHandler(renderTimeCardTable)
+                .withFailureHandler(error => {
+                    showTimeCardError('勤怠データの取得に失敗しました: ' + error.message);
+                })
+                .getTimeCardData(currentYear, currentMonth);
+        }
+
+        function renderTimeCardTable(data) {
+            showTimeCardLoading(false);
+            DOM.timecardBody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                showTimeCardError('該当月のデータがありません。');
+                return;
+            }
+
+            const todayKey = getTodayDateKey();
+            const weekChars = ['日', '月', '火', '水', '木', '金', '土'];
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition';
+                tr.dataset.date = row.date;
+
+                const hasData = !!row.reportDetailId;
+                if (!hasData) tr.classList.add('bg-gray-100');
+                if (row.date === todayKey) tr.classList.add('row-today');
+
+                const dateObj = new Date(row.date + 'T12:00:00');
+                const day = dateObj.getDate();
+                const weekDay = dateObj.getDay();
+                let weekClass = '';
+                if (weekDay === 0) weekClass = 'w-sun';
+                if (weekDay === 6) weekClass = 'w-sat';
+
+                const isConfirmed = row.confirmed === '確定';
+
+                const confirmedCell = document.createElement('td');
+                confirmedCell.className = 'text-center align-middle';
+                if (hasData) {
+                    const chk = document.createElement('input');
+                    chk.type = 'checkbox';
+                    chk.className = 'confirm-checkbox form-checkbox h-4 w-4 text-blue-600';
+                    chk.checked = isConfirmed;
+                    chk.disabled = true;
+                    chk.title = '確定は作業者日報画面でリーダーが行います';
+                    confirmedCell.appendChild(chk);
+                } else {
+                    confirmedCell.textContent = '-';
+                }
+                tr.appendChild(confirmedCell);
+
+                const dayCell = document.createElement('td');
+                dayCell.className = 'text-center font-medium';
+                dayCell.textContent = day;
+                tr.appendChild(dayCell);
+
+                const weekCell = document.createElement('td');
+                weekCell.className = `text-center ${weekClass}`;
+                weekCell.textContent = weekChars[weekDay];
+                tr.appendChild(weekCell);
+
+                appendTextCell(tr, hasData ? (row.status || '-') : '-');
+                appendTextCell(tr, hasData ? (row.startTime || '-') : '-');
+                appendTextCell(tr, hasData ? (row.endTime || '-') : '-');
+                appendTextCell(tr, hasData ? (row.remarks || '-') : '-');
+
+                DOM.timecardBody.appendChild(tr);
+            });
+        }
+
+        // ==========================================
+        // ③ 打刻ロジック
+        // ==========================================
+        function startLocalClock() {
+            updateLocalClock();
+            clockTimer = setInterval(updateLocalClock, 1000);
+        }
+
+        function updateLocalClock() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth() + 1;
+            const d = now.getDate();
+            const week = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            DOM.clockDate.textContent = `${y}年${m}月${d}日（${week}）`;
+            DOM.clockTime.textContent = `${hh}:${mm}:${ss}`;
+        }
+
+        function renderPunchHistory(history) {
+            DOM.historyList.innerHTML = '';
+            if (!history || history.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'history-empty';
+                li.textContent = 'まだ打刻がありません';
+                DOM.historyList.appendChild(li);
+                return;
+            }
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${item.type}</span><span>${item.time}</span>`;
+                DOM.historyList.appendChild(li);
+            });
+        }
+
+        function setPunchButtonsEnabled(enabled, hasIn, hasOut) {
+            canPunch = enabled;
+            DOM.btnIn.disabled = !enabled || hasIn;
+            DOM.btnOut.disabled = !enabled || hasOut;
+        }
+
+        function loadPunchData() {
+            DOM.loadingSpinner.classList.remove('hidden');
+
+            google.script.run
+                .withSuccessHandler(data => {
+                    DOM.loadingSpinner.classList.add('hidden');
+                    if (!data.success) {
+                        DOM.statusMessage.textContent = data.message || 'データの取得に失敗しました';
+                        DOM.statusMessage.classList.remove('hidden');
+                        setPunchButtonsEnabled(false);
+                        return;
+                    }
+                    if (data.clock) {
+                        DOM.clockDate.textContent = `${data.clock.dateLabel}（${data.clock.weekdayLabel}）`;
+                    }
+                    renderPunchHistory(data.history);
+                    setPunchButtonsEnabled(!!data.canPunch, !!data.hasStartTime, !!data.hasEndTime);
+                    if (data.message) {
+                        DOM.statusMessage.textContent = data.message;
+                        DOM.statusMessage.classList.remove('hidden');
+                    } else {
+                        DOM.statusMessage.classList.add('hidden');
+                    }
+                })
+                .withFailureHandler(err => {
+                    DOM.loadingSpinner.classList.add('hidden');
+                    DOM.statusMessage.textContent = '読み込みエラー: ' + err.message;
+                    DOM.statusMessage.classList.remove('hidden');
+                    setPunchButtonsEnabled(false);
+                })
+                .getPunchPageData();
+        }
+
+        function registerPunch(action) {
+            if (!canPunch) return;
+            if (action === 'in' && DOM.btnIn.disabled) return;
+            if (action === 'out' && DOM.btnOut.disabled) return;
+            DOM.btnIn.disabled = true;
+            DOM.btnOut.disabled = true;
+            DOM.feedbackMessage.textContent = '記録中...';
+
+            google.script.run
+                .withSuccessHandler(res => {
+                    DOM.feedbackMessage.textContent = res.message || '記録しました';
+                    DOM.feedbackMessage.style.color = '#16a34a';
+                    loadPunchData();
+                })
+                .withFailureHandler(err => {
+                    DOM.feedbackMessage.textContent = err.message;
+                    DOM.feedbackMessage.style.color = '#dc2626';
+                    loadPunchData();
+                })
+                .registerTimestamp(action);
         }
     </script>
 </body>
