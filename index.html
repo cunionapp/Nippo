@@ -4,12 +4,24 @@
 <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <!-- Favicon & PWA Mobile App Meta Tags -->
     <link rel="icon" type="image/png" href="https://cunionapp.github.io/Nippo/Images/favicon.png?v=9">
     <link rel="apple-touch-icon" href="https://cunionapp.github.io/Nippo/Images/apple-touch-icon.png?v=9">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="日報アプリ">
+    <script>
+        // cdn.tailwindcss.com の本番環境警告を抑制
+        (function() {
+            var orgWarn = console.warn;
+            console.warn = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com') !== -1) {
+                    return;
+                }
+                orgWarn.apply(console, arguments);
+            };
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- サーバー通信用のブリッジスクリプト -->
     <script src="gas-client-bridge.js"></script>

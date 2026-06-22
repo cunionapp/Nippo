@@ -40,71 +40,80 @@
   window.google = window.google || {};
   window.google.script = window.google.script || {};
 
-  window.google.script.run = {
-    withSuccessHandler: function (successCallback) {
-      return {
-        withFailureHandler: function (failureCallback) {
-          return new Proxy({}, {
-            get: function (target, methodName) {
-              return function () {
-                var args = Array.prototype.slice.call(arguments);
-                var token = localStorage.getItem('gas_id_token');
+  function createRunBuilder(successCallback, failureCallback) {
+    var builder = {
+      withSuccessHandler: function (cb) {
+        return createRunBuilder(cb, failureCallback);
+      },
+      withFailureHandler: function (cb) {
+        return createRunBuilder(successCallback, cb);
+      }
+    };
 
-                if (!token) {
-                  console.warn('[Bridge] トークンなし。ログイン画面を表示します。');
-                  triggerLoginFlow();
-                  return;
-                }
-
-                var payload = {
-                  action: 'rpc',
-                  method: methodName,
-                  args: args,
-                  token: token
-                };
-
-                fetch(GAS_API_URL, {
-                  method: 'POST',
-                  mode: 'cors',
-                  headers: { 'Content-Type': 'text/plain' },
-                  body: JSON.stringify(payload)
-                })
-                  .then(function (r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                  })
-                  .then(function (text) {
-                    try {
-                      return JSON.parse(text);
-                    } catch (e) {
-                      console.error('[Bridge] サーバーからの生の応答:', text);
-                      throw new Error(text);
-                    }
-                  })
-                  .then(function (data) {
-                    if (data.error) {
-                      if (data.authError) {
-                        console.warn('[Bridge] トークン無効。再ログインします。');
-                        localStorage.removeItem('gas_id_token');
-                        window.location.reload();
-                      } else {
-                        failureCallback(new Error(data.message));
-                      }
-                    } else {
-                      successCallback(data.result);
-                    }
-                  })
-                  .catch(function (err) {
-                    console.error('[Bridge] API呼び出し失敗:', err);
-                    failureCallback(err);
-                  });
-              };
-            }
-          });
+    return new Proxy(builder, {
+      get: function (target, methodName) {
+        if (methodName in target) {
+          return target[methodName];
         }
-      };
-    }
-  };
+        
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          var token = localStorage.getItem('gas_id_token');
+
+          if (!token) {
+            console.warn('[Bridge] トークンなし。ログイン画面を表示します。');
+            triggerLoginFlow();
+            return;
+          }
+
+          var payload = {
+            action: 'rpc',
+            method: methodName,
+            args: args,
+            token: token
+          };
+
+          fetch(GAS_API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.text();
+            })
+            .then(function (text) {
+              try {
+                return JSON.parse(text);
+              } catch (e) {
+                console.error('[Bridge] サーバーからの生の応答:', text);
+                throw new Error(text);
+              }
+            })
+            .then(function (data) {
+              if (data.error) {
+                if (data.authError) {
+                  console.warn('[Bridge] トークン無効。再ログインします。');
+                  localStorage.removeItem('gas_id_token');
+                  window.location.reload();
+                } else {
+                  if (failureCallback) failureCallback(new Error(data.message));
+                }
+              } else {
+                if (successCallback) successCallback(data.result);
+              }
+            })
+            .catch(function (err) {
+              console.error('[Bridge] API呼び出し失敗:', err);
+              if (failureCallback) failureCallback(err);
+            });
+        };
+      }
+    });
+  }
+
+  window.google.script.run = createRunBuilder(null, null);
 
   // =============================================
   // 3. GIS ログインフローの制御
@@ -145,10 +154,21 @@
     if (typeof Tailwind !== 'undefined' || document.querySelector('script[src*="tailwindcss.com"]') || typeof tailwind !== 'undefined') {
       tailwindLoaded = true;
     } else {
+      var originalWarn = console.warn;
+      console.warn = function() {
+        if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com') !== -1) {
+          return;
+        }
+        originalWarn.apply(console, arguments);
+      };
+
       var script = document.createElement('script');
       script.src = 'https://cdn.tailwindcss.com';
       script.onload = function () {
         tailwindLoaded = true;
+        setTimeout(function() {
+          console.warn = originalWarn;
+        }, 100);
         checkReady();
       };
       document.head.appendChild(script);
