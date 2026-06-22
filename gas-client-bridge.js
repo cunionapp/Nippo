@@ -16,7 +16,7 @@
   // 【設定】GASデプロイURL
   // ==========================================
   // デプロイ（API用 / 実行ユーザー: 自分、アクセス権: 全員）
-  var GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyb2zGD6bxSF-WMSSQdV37vbw9vusJ_SCWDCawgd9ayOZ74bi02fKyvWlnMfn8Jhu88Xg/exec';
+  var GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx0QhCzZSaTWC_NTGX7532PFWviWtnqMTz-2TtsQk72ZXBVpXVdHcNyE7DhCRsZOOgA_A/exec';
 
   // Google OAuth2 クライアントID
   var GOOGLE_CLIENT_ID = '714089387828-fmba296gdli7m0tvdfp2pfmc1l2jkfds.apps.googleusercontent.com';
