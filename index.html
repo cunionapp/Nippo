@@ -10,19 +10,25 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="日報アプリ">
+    <link rel="stylesheet" href="output.css">
     <script>
-        // cdn.tailwindcss.com の本番環境警告を抑制
         (function() {
-            var orgWarn = console.warn;
-            console.warn = function() {
-                if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com') !== -1) {
-                    return;
-                }
-                orgWarn.apply(console, arguments);
-            };
+            var isGAsNative = (typeof google !== 'undefined' && google.script && google.script.run && !window.location.hostname);
+            if (isGAsNative) {
+                console.log('[Optimization] GAS環境を検出。フォールバックとして Tailwind CDN を動的ロードします。');
+                var orgWarn = console.warn;
+                console.warn = function() {
+                    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com') !== -1) {
+                        return;
+                    }
+                    orgWarn.apply(console, arguments);
+                };
+                var script = document.createElement('script');
+                script.src = 'https://cdn.tailwindcss.com';
+                document.head.appendChild(script);
+            }
         })();
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- サーバー通信用のブリッジスクリプト -->
     <script src="gas-client-bridge.js"></script>
     <title>日報アプリ</title>
